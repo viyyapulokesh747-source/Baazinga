@@ -2,6 +2,7 @@
 
 > A fast-paced 5-level browser racing challenge built with HTML, CSS, and vanilla JavaScript.
 
+![BAAZINGA Gameplay](baazinga-gameplay.png)
 ## 🎮 Live Demo
 
 👉 **[Play BAAZINGA](https://viyyapulokesh747-source.github.io/Baazinga/)**
