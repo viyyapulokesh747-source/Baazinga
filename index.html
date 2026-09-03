@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAAZINGA - 5 Level Challenge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;700;800&display=swap');
+
+  :root{
+    --sun:#FFC93C; --sky:#4FB0C6; --coral:#FF6B6B; --grass:#6BCB77; --plum:#3A3160; --cream:#FFF8ED; --road:#4A4560;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; font-family:'Nunito',sans-serif; background:var(--cream); color:var(--plum); overflow-x:hidden; }
+  h1,h2,h3{ font-family:'Baloo 2',sans-serif; margin:0; }
+
+  .wrap{ max-width:460px; margin:0 auto; min-height:100vh; padding:20px 16px 34px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+
+  .screen{ display:none; width:100%; flex-direction:column; align-items:center; animation:pop .3s ease; }
+  .screen.active{ display:flex; }
+  @keyframes pop{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  p.sub{ font-size:16px; color:#6b6455; max-width:360px; margin-top:8px; }
+  .title{ font-size:34px; color:var(--coral); line-height:1.05; letter-spacing:.5px; }
+  .sound-toggle{position:fixed;top:14px;right:14px;z-index:60;border:3px solid #E4DFCF;background:#fff;border-radius:999px;padding:9px 13px;font-family:'Baloo 2';font-weight:800;cursor:pointer;color:var(--plum);box-shadow:0 3px 0 #ddd5c5;}
+  .countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-size:78px;font-weight:800;color:#fff;text-shadow:0 5px 0 rgba(0,0,0,.2);z-index:20;pointer-events:none;}
+  .combo{font-family:'Baloo 2';font-weight:800;color:var(--sun);min-width:105px;}
+  .shake{animation:shake .28s linear;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+  .title span{ color:var(--sky); }
+
+  button.big{
+    font-family:'Baloo 2'; font-size:19px; font-weight:700; color:#fff; background:var(--coral);
+    border:none; border-radius:999px; padding:14px 32px; margin-top:20px; cursor:pointer;
+    box-shadow:0 6px 0 #C94B4B;
+  }
+  button.big:active{ transform:translateY(4px); box-shadow:0 2px 0 #C94B4B; }
+  button.big.blue{ background:var(--sky); box-shadow:0 6px 0 #327E90; }
+
+  .hud{ display:flex; justify-content:space-between; width:100%; max-width:340px; margin:10px 0; font-family:'Baloo 2'; font-weight:700; font-size:17px; }
+  .hud .time{ color:var(--coral); }
+  .hud .score{ color:var(--grass); }
+
+  #arena{
+    position:relative; width:100%; max-width:340px; height:60vh; min-height:400px; max-height:560px;
+    background:var(--road);
+    border-radius:20px; border:3px solid #F1EAD8; overflow:hidden;
+    touch-action:none;
+  }
+  .lane-line{
+    position:absolute; top:0; width:6px; height:100%;
+    background: repeating-linear-gradient(#fff 0 24px, transparent 24px 48px);
+    opacity:.55;
+  }
+  .car{
+    position:absolute; width:52px; height:82px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:30px;
+  }
+  .player-car{ background:var(--sun); box-shadow:0 3px 0 var(--sun); z-index:5; }
+  .rival-car{ z-index:4; }
+
+  .controls{ display:flex; justify-content:space-between; width:100%; max-width:340px; margin-top:16px; }
+  .ctrl-btn{
+    width:96px; height:64px; border-radius:16px; border:3px solid #E4DFCF; background:#fff;
+    font-size:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none;
+  }
+  .ctrl-btn:active{ background:#F1EAD8; }
+
+  .photo-circle{ width:150px; height:150px; border-radius:50%; overflow:hidden; margin:14px auto 6px; border:5px solid var(--sun); box-shadow:0 6px 0 rgba(58,49,96,0.12); }
+  .photo-circle img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  canvas#confetti{ position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+
+  .card{ width:100%; background:#fff; border-radius:20px; padding:18px; margin-top:14px; border:3px solid #F1EAD8; }
+  .level-badge{display:inline-block;background:#fff;border:3px solid #F1EAD8;border-radius:999px;padding:7px 15px;font-family:'Baloo 2';font-weight:800;margin:8px 0 2px;color:var(--plum)}
+  .result-photo{width:180px;height:180px;border-radius:20px;object-fit:cover;border:5px solid var(--sun);box-shadow:0 7px 0 rgba(58,49,96,.12);margin:12px auto 4px}
+  .result-photo.lose{filter:grayscale(1) contrast(1.08);border-color:#555}
+  .result-title{font-size:31px;color:var(--coral);line-height:1.1;margin-top:8px}
+  .result-title.lose-title{color:#444}
+  .progress{width:100%;max-width:340px;display:flex;gap:5px;margin:8px 0 10px}
+  .progress span{height:8px;flex:1;border-radius:99px;background:#e7e1d4}
+  .progress span.done{background:var(--grass)}
+  .progress span.current{background:var(--sun)}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<button class="sound-toggle" id="soundBtn" type="button" aria-pressed="true">🔊 Sound On</button>
+
+<div class="wrap">
+
+  <!-- START -->
+  <div class="screen active" data-screen="start">
+    <div class="title">🏁 BAAZINGA 🏁</div>
+    <p class="sub">Five levels. One goal. Dodge the traffic, survive the timer, and become the ultimate champion.</p>
+    <div class="card">
+      <b>LEVELS</b><br>🟢 10s &nbsp; 🔵 20s &nbsp; 🟡 30s &nbsp; 🟠 45s &nbsp; 🔴 60s
+    </div>
+    <button class="big" id="startBtn">Start Level 1 🚀</button>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" data-screen="game">
+    <div class="level-badge">LEVEL <span id="levelNumber">1</span> / 5</div>
+    <div class="progress" aria-label="Level progress"><span id="p1" class="current"></span><span id="p2"></span><span id="p3"></span><span id="p4"></span><span id="p5"></span></div>
+    <div class="hud">
+      <div class="time">⏱ <span id="timeLeft">10</span>s</div>
+      <div class="score">🏆 <span id="score">0</span></div>
+      <div class="combo">🔥 x<span id="combo">0</span></div>
+    </div>
+    <div id="arena"></div>
+    <div class="controls">
+      <div class="ctrl-btn" id="leftBtn">◀</div>
+      <div class="ctrl-btn" id="rightBtn">▶</div>
+    </div>
+  </div>
+
+  <!-- LOSE -->
+  <div class="screen" data-screen="lose">
+    <img class="result-photo lose" src="https://upload.wikimedia.org/wikipedia/commons/d/d9/Adolf_Hitler_Portrait.jpg" alt="Historical portrait of Adolf Hitler">
+    <div class="result-title lose-title">BAAZINGA! 💥</div>
+    <p class="sub" id="loseMessage">You crashed! Try again and beat the clock.</p>
+    <div class="card"><b id="loseLevel">Level 1</b><br>The road is waiting. Reset, refocus, and go again. 💪</div>
+    <button class="big blue" id="retryBtn">Try again 🔁</button>
+  </div>
+
+  <!-- WIN -->
+  <div class="screen" data-screen="win">
+    <img id="celebrityPhoto" class="result-photo" src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Allu_Arjun_at_69th_NFA.jpg" alt="Celebrity celebration">
+    <div class="result-title" id="winTitle">LEVEL CLEARED! 🎉</div>
+    <p class="sub" id="winMessage">That was brilliant! You cleared the level.</p>
+    <div class="card"><b id="winLevel">Level 1 complete</b><br><span id="winNext">Ready for the next challenge?</span></div>
+    <button class="big" id="winButton" onclick="nextLevel()">Next level ➡️</button>
+  </div>
+
+  <!-- FINAL -->
+  <div class="screen" data-screen="final">
+    <div class="title">🏆 BAAZINGA MASTER 🏆</div>
+    <div class="card"><p style="font-size:18px;">You conquered all five levels. Five timers. Five escalating challenges. You made it to the top. 🔥</p></div>
+    <div class="result-title">YOU WIN! 🎉</div>
+    <p class="sub">The ultimate challenge is complete. Welcome to the BAAZINGA Hall of Fame.</p>
+    <button class="big blue" id="restartBtn">Play Again 🔁</button>
+  </div></div>
+
+<script>
+const LANES = 3;
+const LEVEL_TIMES = [10,20,30,45,60];
+const LEVEL_CONFIG = [
+  {spawn:850, speed:3.3, gift:.18},
+  {spawn:720, speed:4.1, gift:.15},
+  {spawn:600, speed:4.9, gift:.13},
+  {spawn:500, speed:5.7, gift:.11},
+  {spawn:410, speed:6.6, gift:.09}
+];
+const WIN_MESSAGES = [
+  'Clean driving! Even the celebrity is impressed. 😎🔥',
+  'Excellent run! Your reflexes are getting dangerous. ⚡',
+  'Halfway legend! That was seriously fast. 🚀',
+  'One level left. You are absolutely cooking now. 🔥',
+  'YOU DID IT! The 60-second final challenge is yours! 🏆'
+];
+let laneX=[], playerLane=1, score=0, combo=0, timeLeft=10, gameActive=false, currentLevel=1;
+let timerId=null, spawnId=null, loopId=null, countdownId=null, rivals=[], arenaEl=null, playerEl=null;
+let soundOn=true, audioCtx=null;
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const target=document.querySelector('.screen[data-screen="'+name+'"]');
+  if(target) target.classList.add('active');
+}
+function setupAudio(){
+  if(!soundOn) return;
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
+function tone(freq,duration=.08,type='square',gain=.035,when=0){
+  if(!soundOn) return;
+  setupAudio(); if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(0.0001,audioCtx.currentTime+when);
+  g.gain.exponentialRampToValueAtTime(gain,audioCtx.currentTime+when+.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+when+duration);
+  o.connect(g); g.connect(audioCtx.destination); o.start(audioCtx.currentTime+when); o.stop(audioCtx.currentTime+when+duration+.02);
+}
+function sfx(name){
+  if(!soundOn) return;
+  setupAudio();
+  if(name==='move') tone(420,.045,'triangle',.025);
+  if(name==='tick') tone(650,.055,'square',.02);
+  if(name==='go'){tone(520,.1,'square',.035); tone(780,.14,'square',.04,.09);}
+  if(name==='gift'){tone(720,.07,'triangle',.03); tone(980,.12,'triangle',.03,.08);}
+  if(name==='combo'){tone(560,.06,'triangle',.025); tone(820,.1,'triangle',.03,.07);}
+  if(name==='win'){tone(523,.12,'triangle',.04); tone(659,.12,'triangle',.04,.13); tone(784,.2,'triangle',.05,.26);}
+  if(name==='lose'){tone(180,.16,'sawtooth',.045); tone(110,.22,'sawtooth',.04,.12);}
+}
+function layoutLanes(){
+  const w=arenaEl.clientWidth, laneW=w/LANES;
+  laneX=[0,1,2].map(i=>i*laneW+laneW/2); return laneW;
+}
+function positionCar(el,lane){ el.style.left=(laneX[lane]-26)+'px'; }
+function updateProgress(){
+  for(let i=1;i<=5;i++){ const p=document.getElementById('p'+i); p.className=i<currentLevel?'done':(i===currentLevel?'current':''); }
+}
+function startGame(level=1){
+  setupAudio(); clearInterval(timerId); clearInterval(spawnId); cancelAnimationFrame(loopId); clearInterval(countdownId);
+  currentLevel=Math.max(1,Math.min(5,Number(level)||1)); score=0; combo=0; timeLeft=LEVEL_TIMES[currentLevel-1]; gameActive=false; playerLane=1; rivals=[];
+  document.getElementById('score').textContent=score; document.getElementById('combo').textContent=combo; document.getElementById('timeLeft').textContent=timeLeft; document.getElementById('levelNumber').textContent=currentLevel; updateProgress();
+  arenaEl=document.getElementById('arena'); arenaEl.innerHTML=''; showScreen('game'); const laneW=layoutLanes();
+  for(let i=1;i<LANES;i++){const line=document.createElement('div');line.className='lane-line';line.style.left=(i*laneW-3)+'px';arenaEl.appendChild(line);}
+  playerEl=document.createElement('div'); playerEl.className='car player-car'; playerEl.textContent='🚗'; positionCar(playerEl,playerLane); playerEl.style.top=(arenaEl.clientHeight-100)+'px'; arenaEl.appendChild(playerEl);
+  const cd=document.createElement('div'); cd.className='countdown'; arenaEl.appendChild(cd);
+  let n=3; cd.textContent=n; sfx('tick');
+  countdownId=setInterval(()=>{n--; if(n>0){cd.textContent=n;sfx('tick');}else if(n===0){cd.textContent='GO!';sfx('go');}else{clearInterval(countdownId);cd.remove();gameActive=true; runTimers();}},700);
+}
+function runTimers(){
+  const cfg=LEVEL_CONFIG[currentLevel-1];
+  timerId=setInterval(()=>{
+    if(!gameActive)return; timeLeft--; document.getElementById('timeLeft').textContent=Math.max(timeLeft,0);
+    if(timeLeft<=5 && timeLeft>0) sfx('tick');
+    if(timeLeft<=0) endGame(true);
+  },1000);
+  spawnId=setInterval(spawnRival,cfg.spawn); loopId=requestAnimationFrame(gameLoop);
+}
+function moveLane(dir){
+  if(!gameActive)return; const next=Math.max(0,Math.min(LANES-1,playerLane+dir));
+  if(next!==playerLane){playerLane=next;positionCar(playerEl,playerLane);sfx('move');}
+}
+document.getElementById('leftBtn').addEventListener('click',()=>moveLane(-1));
+document.getElementById('rightBtn').addEventListener('click',()=>moveLane(1));
+document.getElementById('startBtn').addEventListener('click',()=>startGame(1));
+document.getElementById('retryBtn').addEventListener('click',()=>startGame(currentLevel));
+document.getElementById('restartBtn').addEventListener('click',()=>startGame(1));
+window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){e.preventDefault();moveLane(-1)} if(e.key==='ArrowRight'){e.preventDefault();moveLane(1)}});
+let touchStartX=null;
+document.addEventListener('touchstart',e=>{touchStartX=e.touches[0]?.clientX??null},{passive:true});
+document.addEventListener('touchend',e=>{if(touchStartX===null)return;const dx=(e.changedTouches[0]?.clientX??touchStartX)-touchStartX;if(Math.abs(dx)>30)moveLane(dx>0?1:-1);touchStartX=null},{passive:true});
+
+document.getElementById('soundBtn').addEventListener('click',()=>{soundOn=!soundOn;const b=document.getElementById('soundBtn');b.textContent=soundOn?'🔊 Sound On':'🔇 Sound Off';b.setAttribute('aria-pressed',String(soundOn));if(soundOn){setupAudio();sfx('move');}});
+
+const rivalEmojis=['🚙','🚕','🚓','🚌','🏎️'];
+function spawnRival(){
+  if(!gameActive)return; const lane=Math.floor(Math.random()*LANES), cfg=LEVEL_CONFIG[currentLevel-1], isGift=Math.random()<cfg.gift;
+  const el=document.createElement('div'); el.className='car rival-car'; el.textContent=isGift?'🎁':rivalEmojis[Math.floor(Math.random()*rivalEmojis.length)]; el.style.background='transparent'; positionCar(el,lane); el.style.top='-90px'; arenaEl.appendChild(el); rivals.push({el,lane,y:-90,isGift});
+}
+function gameLoop(){
+  if(!gameActive)return; const cfg=LEVEL_CONFIG[currentLevel-1], speed=cfg.speed+Math.min(3,score*.025), arenaH=arenaEl.clientHeight, playerTop=arenaH-100;
+  for(let i=rivals.length-1;i>=0;i--){
+    const r=rivals[i]; r.y+=speed; r.el.style.top=r.y+'px';
+    if(r.y>arenaH){r.el.remove();rivals.splice(i,1);continue;}
+    if(r.lane===playerLane && r.y>playerTop-70 && r.y<playerTop+70){
+      if(r.isGift){score+=3;combo++;document.getElementById('score').textContent=score;document.getElementById('combo').textContent=combo;r.el.remove();rivals.splice(i,1);sfx('gift');if(combo%5===0)sfx('combo');}
+      else{r.el.remove();rivals.splice(i,1);combo=0;document.getElementById('combo').textContent=0;arenaEl.classList.remove('shake');void arenaEl.offsetWidth;arenaEl.classList.add('shake');endGame(false);return;}
+    }
+  }
+  score++; combo++; document.getElementById('score').textContent=score; document.getElementById('combo').textContent=combo; if(combo>0&&combo%10===0)sfx('combo');
+  loopId=requestAnimationFrame(gameLoop);
+}
+function nextLevel(){if(currentLevel<5)startGame(currentLevel+1);}
+function endGame(won){
+  if(!gameActive)return; gameActive=false; clearInterval(timerId);clearInterval(spawnId);clearInterval(countdownId);cancelAnimationFrame(loopId);
+  if(won){
+    document.getElementById('winTitle').textContent=currentLevel===5?'FINAL LEVEL CLEARED! 🏆':'LEVEL CLEARED! 🎉';
+    document.getElementById('winMessage').textContent=WIN_MESSAGES[currentLevel-1];
+    document.getElementById('winLevel').textContent='Level '+currentLevel+' complete';
+    document.getElementById('winNext').textContent=currentLevel===5?'You conquered every level. Enter the BAAZINGA Hall of Fame!':'Next challenge: '+LEVEL_TIMES[currentLevel]+' seconds.';
+    document.getElementById('winButton').textContent=currentLevel===5?'See final victory 🏆':'Next level ➡️';
+    document.getElementById('winButton').onclick=currentLevel===5?()=>showScreen('final'):nextLevel;
+    showScreen('win'); burstConfetti(); sfx('win');
+  }else{
+    document.getElementById('loseLevel').textContent='Level '+currentLevel;
+    document.getElementById('loseMessage').textContent='BAAZINGA! 💥 The '+LEVEL_TIMES[currentLevel-1]+'-second challenge got you. Reset and try again!';
+    showScreen('lose'); sfx('lose');
+  }
+}
+
+const colors=['#FF6B6B','#FFC93C','#4FB0C6','#6BCB77','#B98BE0'];
+const canvas=document.getElementById('confetti'),ctx=canvas.getContext('2d'); let particles=[];
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;} window.addEventListener('resize',resizeCanvas);resizeCanvas();
+function burstConfetti(){particles=[];for(let i=0;i<140;i++)particles.push({x:Math.random()*canvas.width,y:-20-Math.random()*canvas.height*.5,w:6+Math.random()*6,h:8+Math.random()*8,color:colors[Math.floor(Math.random()*colors.length)],speed:2+Math.random()*3,drift:(Math.random()-.5)*2,rot:Math.random()*360,rotSpeed:(Math.random()-.5)*10});requestAnimationFrame(animateConfetti);setTimeout(()=>particles=[],4500);}
+function animateConfetti(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.y+=p.speed;p.x+=p.drift;p.rot+=p.rotSpeed;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});if(particles.length)requestAnimationFrame(animateConfetti);else ctx.clearRect(0,0,canvas.width,canvas.height);}
+</script>
+
+</body>
+</html>
